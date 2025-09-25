@@ -1,0 +1,45 @@
+Screen {
+    layout: grid;
+    grid-size: 3 2;
+}
+
+#status-panel{
+    column-span: 2;
+}
+
+#control-panel{
+
+}
+
+.password-status {
+    border: $accent;
+    height: 3;
+}
+
+.password-status.cracking {
+
+}
+
+.password-status.cracked {
+    background: $error;
+    color: auto;
+    border: white;
+}
+
+#password-time {
+    width: 12;
+    align: right middle;
+    dock: right;
+}
+
+#password-password {
+    /*width: 20;*/
+}
+
+#password-status-container{
+    layout: grid;
+    grid-size: 5 6;
+    grid-rows: 3;
+    column-span: 3;
+    border-top: outer $panel;
+}
