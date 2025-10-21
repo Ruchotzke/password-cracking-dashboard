@@ -6,7 +6,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Container
 from textual.reactive import reactive
 from textual.renderables.digits import Digits
-from textual.widget import Widget
+from textual.widgets import Log
 from textual.widgets import Label
 
 
@@ -32,6 +32,22 @@ class PasswordStatusContainer(Container):
             child = PasswordStatusBlock(password)
             self.password_dict[password] = child
             yield child
+
+    async def clear_passwords(self, log: Log) -> None:
+        password_objects = self.query(PasswordStatusBlock)
+        log.write_line(f"Len: {len(password_objects)} : {password_objects}")
+
+        for obj in password_objects:
+            await obj.remove()
+
+        self.password_dict.clear()
+        self.passwords.clear()
+
+    async def add_password(self, password: str, md5: str) -> None:
+        child = PasswordStatusBlock(password)
+        self.password_dict[password] = child
+        self.passwords.append(password)
+        await self.mount(child)
 
 
 
