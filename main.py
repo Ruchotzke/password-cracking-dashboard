@@ -1,6 +1,8 @@
 from textual.app import App
 from textual.widgets import Header, Footer
 
+from hashcat.dictionary_attack import try_dictionary_attack
+
 from tui.controls import ControlPanel
 from tui.cracking_status import StatusPane
 from tui.password_status import PasswordStatusBlock, PasswordStatusContainer
@@ -46,5 +48,7 @@ class PasswordDashboardApp(App):
 
 
 if __name__ == "__main__":
+    results = try_dictionary_attack(["wow", "wow!", ":("])
+    print(f"Results: count={len(results)} cracked={results}")
     app = PasswordDashboardApp()
     app.run()
