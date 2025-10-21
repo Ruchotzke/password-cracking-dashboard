@@ -14,7 +14,7 @@ class PasswordDashboardApp(App):
     """ The app used to run the password dashboard."""
 
     CSS_PATH = "main.css"
-    BINDINGS = [("d", "toggle_cracked", "Toggle dark mode"),
+    BINDINGS = [("d", "try_dictionary", "Try dictionary attack"),
                 ("e", "load_wordlist", "Load Wordlist")]
 
     passwords = ["1", "2", "3", "4", "5", "6", "7", "8"]
@@ -44,13 +44,12 @@ class PasswordDashboardApp(App):
 
         # Load the passwords
         passwords = []
-        self.log_pane.write_line("Loading passwords:")
+        self.log_pane.write_line("Loading passwords")
         with open("plain.txt", 'r') as plain, open("md5.txt", "r") as md5:
             plain_lines = plain.readlines()
             md5_lines = md5.readlines()
             for i in range(0, len(md5_lines)):
                 passwords.append((plain_lines[i].strip(), md5_lines[i].strip()))
-                self.log_pane.write_line(f"PW: {plain_lines[i].strip()}\n   MD5: {md5_lines[i].strip()}")
 
         # Clear out the old display
         await self.password_container.clear_passwords(self.log_pane)
@@ -59,7 +58,13 @@ class PasswordDashboardApp(App):
         for (pw, md5) in passwords:
             await self.password_container.add_password(pw, md5)
 
-
+    async def action_try_dictionary(self):
+        """
+        Attempt a dictionary attack
+        :return:
+        """
+        result = try_dictionary_attack("md5.txt", self.log_pane)
+        self.log_pane.write_line(f"Results: {result}")
 
     def on_mount(self) -> None:
         self.theme = "gruvbox"
@@ -89,7 +94,5 @@ class PasswordDashboardApp(App):
 
 
 if __name__ == "__main__":
-    # results = try_dictionary_attack(["wow", "wow!", ":("])
-    # print(f"Results: count={len(results)} cracked={results}")
     app = PasswordDashboardApp()
     app.run()
