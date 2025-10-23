@@ -10,27 +10,21 @@ async def try_dictionary_attack(md5_file: str, log: Log) -> list:
     :return: A list of cracked passwords.
     """
     # Run hashcat
+    log.write_line(f"Awaiting process creation.")
     proc = await asyncio.create_subprocess_shell(
-        cmd=f"hashcat -m1000 {md5_file} -a0 /usr/share/seclists/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt --quiet --potfile-disabled",
+        cmd=f"hashcat -m0 {md5_file} -a0 /usr/share/seclists/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt --quiet --potfile-disable",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-    result = subprocess.run(
-        ['hashcat',
-         '-m1000',
-         md5_file,
-         '-a0',
-         '/usr/share/seclists/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt',
-         '--quiet',
-         '--potfile-disabled'],
-        capture_output=True,
-        text=True
-    )
+
+    log.write_line(f"Running hashcat...")
+    stdout, stderr = await proc.communicate()
+    log.write_line(f"Hashcat returned with code {proc.returncode}. Parsing stdout.")
 
     # Process the output
     cracked = []
-    for line in result.stdout.splitlines():
-        log.write_line(line)
+    for line in stdout.splitlines():
+        line = line.decode("utf-8").strip()
         if ":" in line:
             duo = line.split(":")
             cracked.append(duo[1])

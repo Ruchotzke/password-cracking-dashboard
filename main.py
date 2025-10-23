@@ -1,9 +1,12 @@
+import asyncio
 import subprocess
 
 from textual.app import App
+from textual.reactive import reactive
 from textual.widgets import Header, Footer, Log, Placeholder
 
 from hashcat.dictionary_attack import try_dictionary_attack
+from hashcat.hashcat_runner import HashcatRunner
 
 from tui.controls import ControlPanel
 from tui.cracking_status import StatusPane
@@ -15,12 +18,15 @@ class PasswordDashboardApp(App):
 
     CSS_PATH = "main.css"
     BINDINGS = [("d", "try_dictionary", "Try dictionary attack"),
-                ("e", "load_wordlist", "Load Wordlist")]
+                ("e", "load_wordlist", "Load Wordlist"),
+                ("b", "run_bruteforce", "Run Brute Force attack"),
+                ("k", "kill_bruteforce", "Kill brute force attack")]
 
     passwords = ["1", "2", "3", "4", "5", "6", "7", "8"]
     password_container = PasswordStatusContainer([])
     cracked = False
     log_pane = Log(id="log")
+    hashcat_runner = None
 
     def action_toggle_cracked(self):
         self.cracked = not self.cracked
@@ -63,11 +69,38 @@ class PasswordDashboardApp(App):
         Attempt a dictionary attack
         :return:
         """
-        result = try_dictionary_attack("md5.txt", self.log_pane)
+        self.log_pane.write_line("Trying dictionary")
+        result = await try_dictionary_attack("md5.txt", self.log_pane)
         self.log_pane.write_line(f"Results: {result}")
+        for pwd in result:
+            self.password_container.password_dict[pwd].finish_cracking()
+
+    async def action_run_bruteforce(self) -> None:
+        """
+        Run a bruteforce attack against the passwords.
+        :return:
+        """
+        self.hashcat_runner.run("md5.txt")
+
+    async def action_kill_bruteforce(self) -> None:
+        self.log_pane.write_line("Killing hashcat brute force.")
+        await self.hashcat_runner.stop()
+
+    def hashcat_updated(self) -> None:
+        """
+        A callback used to update the GUI as hashcat updates.
+        :return:
+        """
+        self.log_pane.write_line(f"Hashcat updated")
+        for pwd in self.hashcat_runner.cracked:
+            self.log_pane.write_line(f" {pwd}")
 
     def on_mount(self) -> None:
         self.theme = "gruvbox"
+        self.hashcat_runner = HashcatRunner(self.log_pane, self.hashcat_updated)
+
+    async def on_unmount(self) -> None:
+        await self.hashcat_runner.stop()
 
     def compose(self):
         yield Header()
