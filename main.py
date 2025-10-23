@@ -91,9 +91,8 @@ class PasswordDashboardApp(App):
         A callback used to update the GUI as hashcat updates.
         :return:
         """
-        self.log_pane.write_line(f"Hashcat updated")
         for pwd in self.hashcat_runner.cracked:
-            self.log_pane.write_line(f" {pwd}")
+            self.password_container.password_dict[pwd[1]].finish_cracking()
 
     def on_mount(self) -> None:
         self.theme = "gruvbox"

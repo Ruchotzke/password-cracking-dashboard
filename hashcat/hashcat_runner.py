@@ -48,6 +48,9 @@ class HashcatRunner:
         :param md5_path: The path to a file full of md5 hashes.
         :return:
         """
+        if self.is_running:
+            self.log.write_line("Unable to start a second concurrent hashcat session.")
+            return
         self.worker = asyncio.create_task(self._run_hashcat(md5_path))
 
     async def _run_hashcat(self, md5_path: str):
@@ -60,6 +63,7 @@ class HashcatRunner:
         # Set up the process
         self.log.write_line("Starting hashcat in brute force mode.")
         self.is_running = True  # Set this at the start
+        self.cracked = []
 
         try:
             self.process = await asyncio.create_subprocess_shell(
@@ -154,7 +158,7 @@ class HashcatRunner:
             self.hardware = line[1:]
         else:
             # Not part of the status, so this must be a hash!
-            self.cracked.append(str(line))
+            self.cracked.append(line)
             self.on_update()
 
     async def stop(self):
