@@ -3,9 +3,6 @@ Screen {
     grid-size: 6 2;
 }
 
-#status-panel{
-    column-span: 3;
-}
 
 .log{
     column-span: 1;

@@ -41,6 +41,9 @@ class HashcatRunner:
         self.hardware = ""
         self.cracked = []
 
+        # Needed to avoid first update woes
+        self.first_update = True
+
 
     def run(self, md5_path: str):
         """
@@ -51,6 +54,7 @@ class HashcatRunner:
         if self.is_running:
             self.log.write_line("Unable to start a second concurrent hashcat session.")
             return
+        self.first_update = True
         self.worker = asyncio.create_task(self._run_hashcat(md5_path))
 
     async def _run_hashcat(self, md5_path: str):
@@ -101,7 +105,10 @@ class HashcatRunner:
         line = line.strip().split(":")
         if line[0].startswith("Session"):
             # If we hit this point, tell the GUI to update (as we've got a fresh update for it)
-            self.on_update()
+            if self.first_update:
+                self.first_update = False
+            else:
+                self.on_update()
         elif line[0].startswith("Status"):
             # Status of this queued task
             self.status = line[1]
@@ -122,7 +129,8 @@ class HashcatRunner:
             self.kernel = line[1]
         elif line[0].startswith("Guess.Mask"):
             # Current mask
-            print(line[1])
+            self.mask = line[1]
+            # print(line[1])
         elif line[0].startswith("Guess.Charset"):
             # Current charsets
             self.charset = line[1]
@@ -132,6 +140,7 @@ class HashcatRunner:
         elif line[0].startswith("Speed"):
             # Current hashing speed
             self.speed = line[1]
+            self.speed = self.speed[:self.speed.index("(")].strip()
         elif line[0].startswith("Recovered"):
             # How many hashes have been recovered
             self.recovered = line[1]
@@ -182,3 +191,4 @@ class HashcatRunner:
                 pass
 
         self.is_running = False
+        self.on_update()

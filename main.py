@@ -16,7 +16,7 @@ from tui.password_status import PasswordStatusBlock, PasswordStatusContainer
 class PasswordDashboardApp(App):
     """ The app used to run the password dashboard."""
 
-    CSS_PATH = "main.css"
+    CSS_PATH = ["css/main.css", "css/status.css"]
     BINDINGS = [("d", "try_dictionary", "Try dictionary attack"),
                 ("e", "load_wordlist", "Load Wordlist"),
                 ("b", "run_bruteforce", "Run Brute Force attack"),
@@ -91,15 +91,22 @@ class PasswordDashboardApp(App):
         A callback used to update the GUI as hashcat updates.
         :return:
         """
+        # Update passwords
         for pwd in self.hashcat_runner.cracked:
-            self.password_container.password_dict[pwd[1]].finish_cracking()
+            if len(pwd) > 1:
+                self.password_container.password_dict[pwd[1]].finish_cracking()
+
+        # Update status
+        self.status.update_content(self.hashcat_runner)
 
     def on_mount(self) -> None:
         self.theme = "gruvbox"
         self.hashcat_runner = HashcatRunner(self.log_pane, self.hashcat_updated)
+        self.status.update_content(self.hashcat_runner)
 
     async def on_unmount(self) -> None:
-        await self.hashcat_runner.stop()
+        if self.hashcat_runner is not None:
+            await self.hashcat_runner.stop()
 
     def compose(self):
         yield Header()
@@ -108,7 +115,8 @@ class PasswordDashboardApp(App):
         yield self.log_pane
 
         # Status
-        yield StatusPane(id="status-panel")
+        self.status = StatusPane(self.log_pane)
+        yield self.status
 
         # Controls
         yield ControlPanel(id="control-panel")

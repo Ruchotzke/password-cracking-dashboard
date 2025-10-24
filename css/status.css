@@ -1,0 +1,28 @@
+#status-panel{
+    column-span: 3;
+}
+
+.status-text{
+    border: $accent;
+    height: 3;
+    width: 1fr;
+    content-align: center middle;
+}
+
+.status-container{
+    width: 1fr;
+    height: 3;
+}
+
+#GPU{
+    height: 1fr;
+    border: $accent;
+}
+
+#GPU > .sparkline--max-color {
+    color: $success;
+}
+
+#GPU > .sparkline--min-color {
+    color: $warning;
+}
