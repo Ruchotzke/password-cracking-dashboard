@@ -1,6 +1,7 @@
 from textual.app import ComposeResult
 from textual.widgets import Placeholder, Sparkline, Label, Log
 from textual.containers import Container, Horizontal
+from textual_plotext import PlotextPlot
 
 from hashcat.hashcat_runner import HashcatRunner
 
@@ -20,16 +21,10 @@ class StatusPane(Container):
         self.overall_status.border_title = "Brute Force Status"
 
         # GPU Over time
-        self.gpu_data = [0] * 100
-        self.gpu_data[10] = 100
-        self.gpu_data[20] = 30
-        self.gpu_data[21] = 100
-        self.gpu_data[55] = 25
+        self.gpu_data = [0] * 200
         self.gpu_index = 0  # Current offset in graph
 
-        self.gpu_graph = Sparkline(
-            data=self.gpu_data,
-            summary_function=max,
+        self.gpu_graph = PlotextPlot(
             id="GPU",)
         self.gpu_graph.border_title = "GPU Utilization"
         self.gpu_util = Label(id="GPU-util", classes="status-text")
@@ -67,6 +62,13 @@ class StatusPane(Container):
         self.progress.border_title = "Cracked Hashes"
 
 
+    def on_mount(self) -> None:
+        plt = self.query_one(PlotextPlot).plt
+        # plt.xaxes(False, False)
+        # plt.yaxes(False, False)
+        # plt.xlabel("H")
+        y = self.gpu_data.copy()
+        plt.scatter(y)
 
     def compose(self) -> ComposeResult:
         """
@@ -78,7 +80,10 @@ class StatusPane(Container):
         yield self.overall_status
 
         # GPU Utilization
+        # yield self.gpu_graph
         yield self.gpu_graph
+
+
 
         # GPU status
         with Horizontal(id="GPU-stats", classes="status-container"):
@@ -121,7 +126,13 @@ class StatusPane(Container):
         self.gpu_index = (self.gpu_index + 1) % len(self.gpu_data)
         self.gpu_data[self.gpu_index] = 0   # To demarcate the update point
 
-        self.gpu_graph.data = list(self.gpu_data)
+        plot = self.query_one(PlotextPlot)
+        plot.plt.clear_data()
+        y = self.gpu_data.copy()
+        plot.plt.scatter(y)
+        plot.refresh()
+
+        self.logger.write_line(f"Updating graph with new sample: {new_sample}")
 
     def update_content(self, runner: HashcatRunner) -> None:
         """
