@@ -38,6 +38,7 @@ def home():
 
 
 if __name__ == '__main__':
-    print("Starting server on http://localhost:5000")
-    print("Login endpoint: http://localhost:5000/login")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    addr = '172.16.42.192:80'
+    print(f"Starting server on http://{addr}")
+    print(f"Login endpoint: http://{addr}/login")
+    app.run(host=addr[:addr.index(":")], port=int(addr[addr.index(":")+1:]), debug=True)
