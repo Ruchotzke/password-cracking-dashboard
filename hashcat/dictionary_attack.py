@@ -12,7 +12,7 @@ async def try_dictionary_attack(md5_file: str, log: Log) -> list:
     # Run hashcat
     log.write_line(f"Awaiting process creation.")
     proc = await asyncio.create_subprocess_shell(
-        cmd=f"hashcat -m0 {md5_file} -a0 /usr/share/seclists/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt --quiet --potfile-disable",
+        cmd=f"hashcat -m0 {md5_file} -a0 /usr/share/seclists/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt --quiet --potfile-disable -d2",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
