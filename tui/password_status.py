@@ -49,6 +49,20 @@ class PasswordStatusContainer(Container):
         self.passwords.append(password)
         await self.mount(child)
 
+    def pause_all(self) -> None:
+        for child in self.password_dict.values():
+            child.pause()
+
+    def resume_all(self) -> None:
+        for child in self.password_dict.values():
+            child.start()
+
+    def reset_all_non_cracked(self) -> None:
+        for child in self.password_dict.values():
+            if(child.cracking):
+                child.accum_time = 0
+
+
 
 
 class PasswordStatusBlock(Container):
@@ -58,6 +72,8 @@ class PasswordStatusBlock(Container):
 
     start_time = reactive(monotonic)
     curr_time = reactive(0.0)
+    accum_time = reactive(0.0)
+    paused = True
 
     def __init__(self, password: str, **kwargs):
         super().__init__(**kwargs)  # Pass any Container-specific kwargs up
@@ -69,11 +85,19 @@ class PasswordStatusBlock(Container):
         self.set_interval(1.0/60, self.update_time)
 
     def update_time(self):
-        if self.cracking:
+        if self.cracking and not self.paused:
             self.curr_time = monotonic() - self.start_time
 
+    def pause(self):
+        self.accum_time += monotonic() - self.start_time
+        self.paused = True
+
+    def start(self):
+        self.start_time = monotonic()
+        self.paused = False
+
     def watch_curr_time(self):
-        td = timedelta(seconds=self.curr_time)
+        td = timedelta(seconds=self.curr_time + self.accum_time)
         mins = td.seconds // 60
         secs = td.seconds % 60
         millis = td.microseconds // 1000

@@ -20,7 +20,9 @@ class PasswordDashboardApp(App):
     BINDINGS = [("d", "try_dictionary", "Try dictionary attack"),
                 ("e", "load_wordlist", "Load Wordlist"),
                 ("b", "run_bruteforce", "Run Brute Force attack"),
-                ("k", "kill_bruteforce", "Kill brute force attack")]
+                ("k", "kill_bruteforce", "Kill brute force attack"),
+                ("p", "pause_timers", "Pause Timers"),
+                ("o", "resume_timers", "Resume Timers"),]
 
     passwords = ["1", "2", "3", "4", "5", "6", "7", "8"]
     password_container = PasswordStatusContainer([])
@@ -85,7 +87,10 @@ class PasswordDashboardApp(App):
         :return:
         """
         self.log_pane.write_line("Trying dictionary")
+        self.password_container.resume_all()
         result = await try_dictionary_attack("md5.txt", self.log_pane)
+        self.password_container.pause_all()
+        self.password_container.reset_all_non_cracked()
         self.log_pane.write_line(f"Results: {result}")
         for pwd in result:
             self.password_container.password_dict[pwd].finish_cracking()
@@ -95,11 +100,18 @@ class PasswordDashboardApp(App):
         Run a bruteforce attack against the passwords.
         :return:
         """
+        self.password_container.resume_all()
         self.hashcat_runner.run("md5.txt")
 
     async def action_kill_bruteforce(self) -> None:
         self.log_pane.write_line("Killing hashcat brute force.")
         await self.hashcat_runner.stop()
+
+    def action_pause_timers(self):
+        self.password_container.pause_all()
+
+    def action_resume_timers(self):
+        self.password_container.resume_all()
 
     def hashcat_updated(self) -> None:
         """
