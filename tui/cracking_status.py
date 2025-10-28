@@ -132,21 +132,18 @@ class StatusPane(Container):
         plot.plt.scatter(y)
         plot.refresh()
 
-        self.logger.write_line(f"Updating graph with new sample: {new_sample}")
-
     def update_content(self, runner: HashcatRunner) -> None:
         """
         Update the status based on current hash status.
         :param runner:
         :return:
         """
-        if runner.is_running:
+        if runner.is_running and not runner.first_update:
             self.overall_status.content = "RUNNING"
             # Update GPU
             util = runner.hardware[3].strip().strip().split()[0]
             self.gpu_util.content = util
             self.update_gpu_data(int(util.split("%")[0]))
-            self.logger.write_line(str(int(util.split("%")[0])))
             # self.gpu_graph.data = self.gpu_data
             self.gpu_temp.content = runner.hardware[1].strip().split()[0]
             self.gpu_fan.content = runner.hardware[2].strip().strip().split()[0]

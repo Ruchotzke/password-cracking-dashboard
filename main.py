@@ -16,7 +16,7 @@ from tui.password_status import PasswordStatusBlock, PasswordStatusContainer
 class PasswordDashboardApp(App):
     """ The app used to run the password dashboard."""
 
-    CSS_PATH = ["css/main.css", "css/status.css"]
+    CSS_PATH = ["css/main.css", "css/status.css", "css/controls.css"]
     BINDINGS = [("d", "try_dictionary", "Try dictionary attack"),
                 ("e", "load_wordlist", "Load Wordlist"),
                 ("b", "run_bruteforce", "Run Brute Force attack"),
@@ -32,6 +32,21 @@ class PasswordDashboardApp(App):
         self.cracked = not self.cracked
         for v in self.password_container.password_dict.values():
             v.finish_cracking()
+
+    async def on_control_panel_passwords_updated_message(self, event: ControlPanel.PasswordsUpdatedMessage):
+        """
+        Load in passwords from the web server.
+        :return:
+        """
+        # Generate a text file containing these passwords
+        self.log_pane.write_line(f"Updating {len(event.passwords)} passwords from web.")
+        with open("plain.txt", "w") as plaintext_handle:
+            for password in event.passwords:
+                plaintext_handle.write(password + "\n")
+
+        # Complete the rest of the loading process
+        await self.action_load_wordlist()
+        self.log_pane.write_line("Passwords updated.")
 
     async def action_load_wordlist(self):
         """
@@ -94,7 +109,10 @@ class PasswordDashboardApp(App):
         # Update passwords
         for pwd in self.hashcat_runner.cracked:
             if len(pwd) > 1:
-                self.password_container.password_dict[pwd[1]].finish_cracking()
+                try:
+                    self.password_container.password_dict[pwd[1]].finish_cracking()
+                except Exception:
+                    self.log_pane.write_line(f"{pwd[1]} cracked but exception!")
 
         # Update status
         self.status.update_content(self.hashcat_runner)
@@ -119,7 +137,8 @@ class PasswordDashboardApp(App):
         yield self.status
 
         # Controls
-        yield ControlPanel(id="control-panel")
+        self.controls = ControlPanel(self.log_pane)
+        yield self.controls
 
         # Passwords
         self.password_container = PasswordStatusContainer(self.passwords)

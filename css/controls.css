@@ -1,0 +1,22 @@
+#web-server-container {
+    border: $accent;
+    height: 1fr;
+}
+
+#Controls {
+    border: $accent;
+    height: 3fr;
+}
+
+#web-server-count {
+    border: $accent;
+    width: 1fr;
+    height: 1fr;
+    content-align: right middle;
+}
+
+#btn-load-passwords {
+    border: $accent;
+    width: 2fr;
+    height: 1fr;
+}
