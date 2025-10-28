@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -27,18 +27,11 @@ def login():
 
 @app.route('/')
 def home():
-    return """
-    <html>
-        <body>
-            <h1>Login Server Running</h1>
-            <p>POST credentials to /login</p>
-        </body>
-    </html>
-    """
+    return render_template('submit.html')
 
 
 if __name__ == '__main__':
-    addr = '172.16.42.192:80'
+    addr = '192.168.0.195:5000'
     print(f"Starting server on http://{addr}")
     print(f"Login endpoint: http://{addr}/login")
     app.run(host=addr[:addr.index(":")], port=int(addr[addr.index(":")+1:]), debug=True)
